@@ -1,0 +1,179 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "title": "Nowy panel",
+        "description": "Panel **{name}** ({model}) zgłosił się do Home Assistanta. Dodać go? Potem w opcjach wybierzesz, co ma pokazywać."
+      },
+      "user": {
+        "title": "Wallglass",
+        "description": "Dodaj serwer Wallglass. Panele z aplikacją będą się potem zgłaszać tutaj do zatwierdzenia."
+      }
+    },
+    "abort": {
+      "use_app": "Wallglass jest już dodany. Panele dodają się same po zalogowaniu w aplikacji.",
+      "already_configured": "Ten panel jest już dodany."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Co pokazuje panel",
+        "menu_options": {
+          "general": "Ogólne (pogoda, zadania, śmieci, ikony stanu)",
+          "doorbell": "Domofon / furtka",
+          "cameras": "Kamery",
+          "security": "Ochrona i rolety",
+          "heating": "Ogrzewanie",
+          "rooms": "Pokoje i temperatury",
+          "appearance": "Wygląd i noc",
+          "save": "Zapisz",
+          "gestures": "Gesty"
+        }
+      },
+      "general": {
+        "title": "Ogólne",
+        "data": {
+          "weather": "Pogoda",
+          "todo": "Lista zadań",
+          "waste": "Czujnik wywozu śmieci",
+          "chips": "Ikony stanu (pokazywane gdy aktywne)",
+          "media_players": "Odtwarzacze muzyki"
+        }
+      },
+      "doorbell": {
+        "title": "Domofon",
+        "data": {
+          "doorbell_camera": "Kamera domofonu",
+          "doorbell_ring": "Czujnik dzwonka",
+          "doorbell_open": "Otwieranie furtki (skrypt/przycisk)",
+          "doorbell_mute": "Wyciszenie dzwonka",
+          "talk_go2rtc": "Rozmowa przez go2rtc"
+        },
+        "data_description": {
+          "talk_go2rtc": "Pokazuje przycisk mikrofonu. Wymaga strumienia go2rtc nazwanego jak kamera (camera.furtka → furtka) ze źródłem dźwięku dwukierunkowego, np. isapi:// dla Hikvision."
+        }
+      },
+      "cameras": {
+        "title": "Kamery",
+        "data": {
+          "cameras": "Kamery na panelu",
+          "go2rtc_rtsp": "Adres RTSP go2rtc (np. rtsp://192.168.1.10:8554) – strumienie nazwane jak kamera",
+          "go2rtc_api": "Adres API go2rtc"
+        },
+        "description": "Puste = wszystkie kamery z HA.",
+        "data_description": {
+          "go2rtc_api": "Tylko gdy nie jest to host RTSP z portem 1984, np. http://192.168.1.10:1984."
+        }
+      },
+      "security": {
+        "title": "Ochrona",
+        "data": {
+          "alarms": "Strefy alarmu",
+          "openings": "Okna i drzwi",
+          "covers": "Rolety"
+        },
+        "description": "Puste pole = aplikacja wykrywa sama."
+      },
+      "heating": {
+        "title": "Ogrzewanie",
+        "data": {
+          "heating_switch": "Włącznik ogrzewania",
+          "heating_timer": "Timer",
+          "heating_add_hour": "Akcja „+1 godzina”",
+          "heating_stop": "Akcja „Wyłącz”",
+          "heating_schedules": "Harmonogramy (przełączniki)"
+        }
+      },
+      "rooms": {
+        "title": "Pokoje",
+        "data": {
+          "rooms": "Czujniki temperatury"
+        },
+        "description": "Nazwa pokoju z obszaru w HA, wilgotność z tego samego urządzenia."
+      },
+      "appearance": {
+        "title": "Wygląd",
+        "data": {
+          "wallpaper": "Tapeta",
+          "wallpaper_image": "Zdjęcie tapety (np. /local/tapeta.jpg)",
+          "screensaver_seconds": "Wygaszacz po (0 = nigdy)",
+          "night_from": "Noc od godziny",
+          "night_to": "Noc do godziny"
+        }
+      },
+      "gestures": {
+        "title": "Gesty",
+        "description": "Strona otwierana przesunięciem palca na ekranie startowym.",
+        "data": {
+          "gesture_up": "W górę",
+          "gesture_down": "W dół",
+          "gesture_left": "W lewo",
+          "gesture_right": "W prawo"
+        }
+      }
+    }
+  },
+  "selector": {
+    "wallpaper": {
+      "options": {
+        "daytime": "Gradient wg pory dnia",
+        "dark": "Ciemna",
+        "image": "Zdjęcie"
+      }
+    },
+    "page": {
+      "options": {
+        "start": "Start",
+        "gate": "Furtka",
+        "cameras": "Kamery",
+        "security": "Ochrona",
+        "covers": "Rolety",
+        "heating": "Ogrzewanie",
+        "rooms": "Dom",
+        "todo": "Zadania",
+        "settings": "Ustawienia",
+        "waste": "Wywóz odpadów",
+        "assistant": "Asystent",
+        "music": "Muzyka"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Połączenie"
+      }
+    },
+    "light": {
+      "screen": {
+        "name": "Ekran"
+      }
+    },
+    "select": {
+      "page": {
+        "name": "Strona",
+        "state": {
+          "start": "Start",
+          "gate": "Furtka",
+          "cameras": "Kamery",
+          "security": "Ochrona",
+          "covers": "Rolety",
+          "heating": "Ogrzewanie",
+          "rooms": "Dom",
+          "todo": "Zadania",
+          "settings": "Ustawienia",
+          "waste": "Wywóz odpadów",
+          "assistant": "Asystent",
+          "music": "Muzyka"
+        }
+      }
+    },
+    "switch": {
+      "quiet": {
+        "name": "Tryb cichy"
+      }
+    }
+  }
+}

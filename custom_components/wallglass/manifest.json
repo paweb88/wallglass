@@ -1,0 +1,17 @@
+{
+  "domain": "wallglass",
+  "name": "Wallglass",
+  "codeowners": [
+    "@paweb88"
+  ],
+  "config_flow": true,
+  "dependencies": [
+    "websocket_api"
+  ],
+  "documentation": "https://github.com/paweb88/wallglass",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/paweb88/wallglass/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

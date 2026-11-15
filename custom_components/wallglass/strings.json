@@ -1,0 +1,179 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "title": "New panel",
+        "description": "Panel **{name}** ({model}) announced itself to Home Assistant. Add it? Then choose what it shows in the options."
+      },
+      "user": {
+        "title": "Wallglass",
+        "description": "Add the Wallglass server. Panels running the app will then show up here to confirm."
+      }
+    },
+    "abort": {
+      "use_app": "Wallglass is already added. Panels add themselves after logging in from the app.",
+      "already_configured": "This panel is already added."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "What the panel shows",
+        "menu_options": {
+          "general": "General (weather, to-do, waste, status icons)",
+          "doorbell": "Doorbell / gate",
+          "cameras": "Cameras",
+          "security": "Security and covers",
+          "heating": "Heating",
+          "rooms": "Rooms and temperatures",
+          "appearance": "Look and night",
+          "save": "Save",
+          "gestures": "Gestures"
+        }
+      },
+      "general": {
+        "title": "General",
+        "data": {
+          "weather": "Weather",
+          "todo": "To-do list",
+          "waste": "Waste collection sensor",
+          "chips": "Status icons (shown when active)",
+          "media_players": "Media players"
+        }
+      },
+      "doorbell": {
+        "title": "Doorbell",
+        "data": {
+          "doorbell_camera": "Doorbell camera",
+          "doorbell_ring": "Ring sensor",
+          "doorbell_open": "Open gate (script/button)",
+          "doorbell_mute": "Doorbell mute",
+          "talk_go2rtc": "Talk through go2rtc"
+        },
+        "data_description": {
+          "talk_go2rtc": "Shows the microphone button. Needs a go2rtc stream named like the camera (camera.gate → gate) with a two-way audio source, e.g. isapi:// for Hikvision."
+        }
+      },
+      "cameras": {
+        "title": "Cameras",
+        "data": {
+          "cameras": "Cameras on the panel",
+          "go2rtc_rtsp": "go2rtc RTSP address (e.g. rtsp://192.168.1.10:8554) – streams named like the camera",
+          "go2rtc_api": "go2rtc API address"
+        },
+        "description": "Empty = all cameras in HA.",
+        "data_description": {
+          "go2rtc_api": "Only if it is not the RTSP host on port 1984, e.g. http://192.168.1.10:1984."
+        }
+      },
+      "security": {
+        "title": "Security",
+        "data": {
+          "alarms": "Alarm zones",
+          "openings": "Windows and doors",
+          "covers": "Covers"
+        },
+        "description": "Empty = auto-detected by the app."
+      },
+      "heating": {
+        "title": "Heating",
+        "data": {
+          "heating_switch": "Heating switch",
+          "heating_timer": "Timer",
+          "heating_add_hour": "“+1 hour” action",
+          "heating_stop": "“Off” action",
+          "heating_schedules": "Schedules (switches)"
+        }
+      },
+      "rooms": {
+        "title": "Rooms",
+        "data": {
+          "rooms": "Temperature sensors"
+        },
+        "description": "Room name from the HA area, humidity from the same device."
+      },
+      "appearance": {
+        "title": "Look",
+        "data": {
+          "wallpaper": "Wallpaper",
+          "wallpaper_image": "Wallpaper photo (e.g. /local/wallpaper.jpg)",
+          "screensaver_seconds": "Screensaver after (0 = never)",
+          "night_from": "Night from hour",
+          "night_to": "Night until hour"
+        }
+      },
+      "gestures": {
+        "title": "Gestures",
+        "description": "Page opened by a swipe on the start screen.",
+        "data": {
+          "gesture_up": "Up",
+          "gesture_down": "Down",
+          "gesture_left": "Left",
+          "gesture_right": "Right"
+        }
+      }
+    }
+  },
+  "selector": {
+    "wallpaper": {
+      "options": {
+        "daytime": "Gradient by time of day",
+        "dark": "Dark",
+        "image": "Photo"
+      }
+    },
+    "page": {
+      "options": {
+        "start": "Start",
+        "gate": "Gate",
+        "cameras": "Cameras",
+        "security": "Security",
+        "covers": "Covers",
+        "heating": "Heating",
+        "rooms": "Home",
+        "todo": "To-do",
+        "settings": "Settings",
+        "waste": "Waste collection",
+        "assistant": "Assistant",
+        "music": "Music"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "connected": {
+        "name": "Connection"
+      }
+    },
+    "light": {
+      "screen": {
+        "name": "Screen"
+      }
+    },
+    "select": {
+      "page": {
+        "name": "Page",
+        "state": {
+          "start": "Start",
+          "gate": "Gate",
+          "cameras": "Cameras",
+          "security": "Security",
+          "covers": "Covers",
+          "heating": "Heating",
+          "rooms": "Home",
+          "todo": "To-do",
+          "settings": "Settings",
+          "waste": "Waste collection",
+          "assistant": "Assistant",
+          "music": "Music"
+        }
+      }
+    },
+    "switch": {
+      "quiet": {
+        "name": "Quiet mode"
+      }
+    }
+  }
+}
