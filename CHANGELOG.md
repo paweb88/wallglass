@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- The screen dims by the room, not only by the clock: the panel's light sensor (or, until it reports, the sun below
+  the horizon) puts a dark room on the night brightness, so the clock no longer shines at full brightness in the evening.
+- The night brightness chosen in the panel settings is now actually used.
+
 ## 0.2.1 – 2026-11-15
 
 - Follow-up questions: after an answer the assistant listens again in the same conversation (the model keeps the context).

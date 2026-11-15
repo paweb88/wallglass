@@ -25,6 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
+import app.wallglass.ambient.RoomDarkness
+import app.wallglass.ambient.ambientLux
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.wallglass.ha.VoiceState
 import app.wallglass.ha.ConnectionState
@@ -123,6 +126,8 @@ private fun PanelRoot(vm: PanelViewModel, onAuthFailed: () -> Unit, setBrightnes
     val history by vm.history.collectAsStateWithLifecycle()
     val settings by vm.settings.collectAsStateWithLifecycle()
     val voice by vm.voiceState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val lux by remember { ambientLux(context) }.collectAsStateWithLifecycle(initialValue = null)
 
     var now by remember { mutableStateOf(LocalDateTime.now()) }
     var lastTouch by remember { mutableLongStateOf(System.currentTimeMillis()) }
@@ -146,9 +151,14 @@ private fun PanelRoot(vm: PanelViewModel, onAuthFailed: () -> Unit, setBrightnes
         }
     }
     LaunchedEffect(connection) { if (connection == ConnectionState.AUTH_FAILED) onAuthFailed() }
+    // dim by the room, not only by the clock: a dark room in the evening gets the night brightness too
+    val sunDown = states[SUN]?.state == "below_horizon"
+    var roomDark by remember { mutableStateOf(night) }
+    LaunchedEffect(lux, sunDown) { roomDark = RoomDarkness.isDark(roomDark, lux, sunDown) }
+    val dark = night || roomDark
     val level: Float? = when {
-        night && sleeping -> cfg.night.brightness
-        night -> minOf(cfg.night.awakeBrightness, manualBrightness ?: 1f)
+        dark && sleeping -> cfg.night.brightness
+        dark -> minOf(settings.nightBrightness ?: cfg.night.awakeBrightness, manualBrightness ?: 1f)
         // by day: full brightness unless HA dimmed the screen; never the (often very low) system setting
         else -> manualBrightness ?: settings.dayBrightness ?: 1f
     }
@@ -249,7 +259,7 @@ private fun PanelRoot(vm: PanelViewModel, onAuthFailed: () -> Unit, setBrightnes
         if (sleeping) {
             val outside = panel.weather?.let { states[it]?.attrDouble("temperature") }
             val inside = panel.rooms.firstOrNull()?.let { states[it.temperature]?.numericState }
-            Screensaver(now, night, outside, inside) { sleeping = false; lastTouch = System.currentTimeMillis() }
+            Screensaver(now, dark, outside, inside) { sleeping = false; lastTouch = System.currentTimeMillis() }
             return@Box
         }
         val back = { vm.go(Page.START) }
@@ -332,3 +342,5 @@ private fun PanelRoot(vm: PanelViewModel, onAuthFailed: () -> Unit, setBrightnes
         }
     }
 }
+
+private const val SUN = "sun.sun"
