@@ -35,7 +35,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.material3.Text
 import androidx.compose.ui.text.TextStyle
+import android.media.AudioManager
+import android.media.ToneGenerator
 import androidx.media3.common.MediaItem
+import androidx.media3.common.PlaybackException
+import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import app.wallglass.ha.VoiceState
@@ -51,6 +55,7 @@ fun AssistantScreen(
     speak: Boolean,
     onAgain: () -> Unit,
     onClose: () -> Unit,
+    onAnswerDone: () -> Unit = {},
 ) {
     Column(
         Modifier.fillMaxSize().background(BG).padding(22.dp),
@@ -58,8 +63,13 @@ fun AssistantScreen(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Orb(active = state is VoiceState.Listening || state is VoiceState.Thinking)
+        if (state is VoiceState.Listening && speak) ListeningCue(state.turn)
         val (label, main) = when (state) {
-            VoiceState.Idle, VoiceState.Listening -> "Słucham…" to "Powiedz, co mam zrobić"
+            VoiceState.Idle -> "Słucham…" to "Powiedz, co mam zrobić"
+            is VoiceState.Listening ->
+                if (state.turn == 0) "Słucham…" to "Powiedz, co mam zrobić"
+                else "Słucham dalej…" to "Powiedz „OK”, żeby zakończyć"
+            VoiceState.Closed -> "Do usłyszenia" to "…"
             is VoiceState.Thinking -> "Powiedziałeś" to quote(state.heard)
             is VoiceState.Answer -> "Powiedziałeś" to quote(state.heard)
             is VoiceState.Failed -> "Coś poszło nie tak" to state.message
@@ -71,7 +81,15 @@ fun AssistantScreen(
             Box(Modifier.fillMaxWidth().glass(20.dp, Color(0x1AFFFFFF)).padding(16.dp)) {
                 Text(state.answer, style = TextStyle(color = Color.White, fontSize = 17.sp, fontWeight = FontWeight.Medium), maxLines = 6)
             }
-            if (speak && baseUrl != null && state.ttsUrl != null) SpeakOnce(baseUrl + state.ttsUrl)
+            if (speak && baseUrl != null && state.ttsUrl != null) {
+                SpeakOnce(baseUrl + state.ttsUrl, onAnswerDone)
+            } else if (!speak) {
+                // silent (night / quiet mode): give a moment to read, then listen again
+                LaunchedEffect(state) {
+                    kotlinx.coroutines.delay(SILENT_READ_MS)
+                    onAnswerDone()
+                }
+            }
         }
         Spacer(Modifier.weight(1f))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -99,10 +117,18 @@ private fun Orb(active: Boolean) {
 
 @OptIn(UnstableApi::class)
 @Composable
-private fun SpeakOnce(url: String) {
+private fun SpeakOnce(url: String, onDone: () -> Unit) {
     val context = LocalContext.current
+    val done by androidx.compose.runtime.rememberUpdatedState(onDone)
     DisposableEffect(url) {
         val player = ExoPlayer.Builder(context).build().apply {
+            addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(playbackState: Int) {
+                    if (playbackState == Player.STATE_ENDED) done()
+                }
+
+                override fun onPlayerError(error: PlaybackException) = done()
+            })
             setMediaItem(MediaItem.fromUri(url))
             prepare()
             play()
@@ -110,6 +136,20 @@ private fun SpeakOnce(url: String) {
         onDispose { player.release() }
     }
 }
+
+/** Short beep when the panel starts listening, so the user knows when to speak. */
+@Composable
+private fun ListeningCue(turn: Int) {
+    DisposableEffect(turn) {
+        val tone = runCatching { ToneGenerator(AudioManager.STREAM_MUSIC, CUE_VOLUME) }.getOrNull()
+        tone?.startTone(ToneGenerator.TONE_PROP_BEEP, CUE_MS)
+        onDispose { tone?.release() }
+    }
+}
+
+private const val CUE_VOLUME = 60
+private const val CUE_MS = 120
+private const val SILENT_READ_MS = 2_500L
 
 @Composable
 fun rememberAssistantStart(onStart: () -> Unit) {

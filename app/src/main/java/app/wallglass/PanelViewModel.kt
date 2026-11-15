@@ -166,6 +166,9 @@ class PanelViewModel(app: Application) : AndroidViewModel(app), PanelActions {
 
     fun cancelVoice() = _voice.value?.cancel()
 
+    /** The answer was spoken: listen for a follow-up question. */
+    fun voiceAnswerDone() = _voice.value?.answerDone()
+
     fun connect() {
         val url = tokenStore.baseUrl ?: return
         _client.value?.stop()
@@ -177,7 +180,7 @@ class PanelViewModel(app: Application) : AndroidViewModel(app), PanelActions {
         ha.start()
         val link = PanelLink(ha, localSettings.deviceId, deviceName(), android.os.Build.MODEL, app.wallglass.BuildConfig.VERSION_NAME)
         _link.value = link
-        _voice.value = VoiceAssistant(ha, scope)
+        _voice.value = VoiceAssistant(ha, scope) { wakeListener.stopAndWait() }
         scope.launch { ha.connectedEvents.collect { n -> if (n > 0) link.onConnected(scope) } }
         scope.launch {
             val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true; isLenient = true }

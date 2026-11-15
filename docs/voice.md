@@ -11,6 +11,12 @@ combination works: Whisper or Speech-to-Phrase or HA Cloud for STT, the built-in
 - tap the **microphone button** on the start screen, or
 - swipe up on the start screen (default gesture).
 
+A short beep means the panel is listening. After each answer it **listens again** in the same conversation, so you
+can ask a follow-up or answer the assistant's question. End the conversation by saying “OK”, “dzięki”, “dziękuję”,
+“to wszystko”, “koniec” or “nieważne”, or just stay silent for 6 seconds: the panel goes back to the start screen
+and to sleep. A closing word counts only as a reply to the assistant, so “OK, turn on the light” right after the wake
+word works normally.
+
 The panel uses your **preferred** Assist pipeline. Set it in *Settings → Voice assistants*.
 At night, and while **quiet mode** is on, the answer is shown as text only, without sound.
 

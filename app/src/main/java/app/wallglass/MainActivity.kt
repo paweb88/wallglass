@@ -26,6 +26,7 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import app.wallglass.ha.VoiceState
 import app.wallglass.ha.ConnectionState
 import app.wallglass.ui.CamerasScreen
 import app.wallglass.ui.CoversScreen
@@ -272,7 +273,18 @@ private fun PanelRoot(vm: PanelViewModel, onAuthFailed: () -> Unit, setBrightnes
             Page.ASSISTANT -> {
                 LaunchedEffect(Unit) { vm.startVoice() }
                 androidx.compose.runtime.DisposableEffect(Unit) { onDispose { vm.cancelVoice() } }
-                AssistantScreen(voice, vm.baseUrl, speak = !night && !settings.quiet, onAgain = { vm.cancelVoice(); vm.startVoice() }, onClose = back)
+                // "OK" / "dzięki" or silence ends the conversation: back to the start screen and to sleep
+                LaunchedEffect(voice) {
+                    if (voice is VoiceState.Closed) {
+                        vm.go(Page.START)
+                        sleeping = true
+                    }
+                }
+                AssistantScreen(
+                    voice, vm.baseUrl, speak = !night && !settings.quiet,
+                    onAnswerDone = vm::voiceAnswerDone,
+                    onAgain = { vm.cancelVoice(); vm.startVoice() }, onClose = back,
+                )
             }
             Page.SETTINGS -> SettingsScreen(
                 modules = allTiles(panel, states),

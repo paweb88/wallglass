@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 – 2026-11-15
+
+- Follow-up questions: after an answer the assistant listens again in the same conversation (the model keeps the context).
+  Say “OK”, “dzięki”, “to wszystko” or similar, or stay silent for 6 s, to end it. The panel then returns to the start
+  screen and goes to sleep.
+- A short beep marks when the panel starts listening.
+- If nothing was heard right after the wake word, the panel listens once more instead of giving up.
+- The wake-word listener releases the microphone before the assistant starts recording.
+
 ## 0.2.0 – 2026-11-15
 
 - Two APKs: full (with the “Hej Dom” wake word) and lite (without it, about half the size).
