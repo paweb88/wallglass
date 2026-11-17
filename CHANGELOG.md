@@ -5,6 +5,8 @@
 - The screen dims by the room, not only by the clock: the panel's light sensor (or, until it reports, the sun below
   the horizon) puts a dark room on the night brightness, so the clock no longer shines at full brightness in the evening.
 - The night brightness chosen in the panel settings is now actually used.
+- Sounds are no longer taken for questions: a transcript made only of annotations such as “*śmiech*” or “[muzyka]”
+  (a crying baby, the TV) counts as silence, so it ends a follow-up instead of keeping the conversation going.
 
 ## 0.2.1 – 2026-11-15
 

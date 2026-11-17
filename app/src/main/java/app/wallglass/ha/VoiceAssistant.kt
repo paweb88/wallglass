@@ -131,11 +131,13 @@ class VoiceAssistant(
         var closed = false
         /** Nothing was recognised. */
         var silent = false
+        /** Only sounds were recognised; later pipeline events are ignored. */
+        var ignored = false
     }
 
     private fun onEvent(event: JsonObject, run: Run) {
         val data = event["data"] as? JsonObject
-        if (run.closed) {
+        if (run.closed || run.ignored) {
             if (event["type"]?.jsonPrimitive?.contentOrNull in END_EVENTS) run.finished.complete(Unit)
             return
         }
@@ -150,6 +152,11 @@ class VoiceAssistant(
                 run.heard = text
                 when {
                     text.isNullOrBlank() -> run.silent = true
+                    // "*płacz*", "[muzyka]": a sound, not someone talking – drop the answer HA will still produce
+                    NonSpeech.isNonSpeech(text) -> {
+                        run.silent = true
+                        run.ignored = true
+                    }
                     // closing phrases only count as an answer to the assistant, never right after waking
                     run.followUp && ConversationEnd.isClosing(text) -> {
                         run.closed = true
