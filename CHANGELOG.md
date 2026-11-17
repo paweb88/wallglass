@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Waste collection is a start-screen tile: coloured dots for the fractions, the date (“jutro”, “czw, 19.11”), warm when
+  the bins have to go out; tapping it opens the schedule. The Today card no longer repeats closures and waste, which
+  have their own tiles, and the tiles grow to use the freed space.
 - Start screen tiles: the name (Furtka, Kamery…) and its icon are larger, as readable from a distance as the state below.
 - The screen dims by the room, not only by the clock: the panel's light sensor (or, until it reports, the sun below
   the horizon) puts a dark room on the night brightness, so the clock no longer shines at full brightness in the evening.

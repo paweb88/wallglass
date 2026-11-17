@@ -48,6 +48,8 @@ data class TileModel(
     val active: Boolean = false,
     /** Good news worth a green tile, e.g. everything closed. */
     val ok: Boolean = false,
+    /** Colour marks shown above the state, e.g. the waste fractions collected next. */
+    val marks: List<Color> = emptyList(),
 )
 
 /**
@@ -69,7 +71,7 @@ fun StartScreen(
     val night = now.hour >= 17 || now.hour < 7
     val today = todayRows(panel, states, todo, now)
     // the Today card already gives the to-do list a way in; the assistant has the mic button
-    val tiles = allTiles(panel, states)
+    val tiles = allTiles(panel, states, now.toLocalDate())
         .filter { it.page.name !in hidden }
         .filterNot { it.page == Page.ASSISTANT || (it.page == Page.TODO && today.any { r -> r.page == Page.TODO }) }
     Column(Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -140,23 +142,7 @@ private fun chipIcon(name: String?) = when (name?.removePrefix("mdi:")?.replace(
 data class TodayRow(val icon: ImageVector, val tint: Color, val text: String, val detail: String, val page: Page)
 
 private fun todayRows(panel: ResolvedPanel, states: Map<String, Entity>, todo: List<TodoItem>, now: LocalDateTime): List<TodayRow> = buildList {
-    if (panel.openings.isNotEmpty() || panel.alarms.isNotEmpty()) {
-        val open = panel.openings.mapNotNull { states[it.entity] }.filter { it.isOn }
-        val armed = panel.alarms.mapNotNull { states[it.entity] }.count { it.state.startsWith("armed") }
-        val covers = panel.covers.count { states[it.entity]?.state == "open" }
-        val detail = listOfNotNull(
-            if (armed > 0) "alarm: $armed" else null,
-            if (covers > 0) "rolety: $covers otw." else null,
-        ).joinToString(" · ")
-        add(
-            if (open.isEmpty()) TodayRow(PanelIcons.lock, Palette.okText, "Wszystko zamknięte", detail, Page.SECURITY)
-            else TodayRow(PanelIcons.unlock, Palette.amber, "Otwarte: ${open.size}", open.first().name, Page.SECURITY),
-        )
-    }
-    panel.waste?.let { states[it] }?.takeIf { it.isAvailable }?.let { w ->
-        val days = w.attrDouble("daysTo")?.toInt()
-        add(TodayRow(PanelIcons.trash, if (days != null && days <= 1) Palette.amber else Palette.wasteTint, w.state, daysLabel(days), Page.WASTE))
-    }
+    // closures and waste have their own tiles; the card keeps what has no tile of its own
     if (panel.todo != null) {
         val next = todo.filterNot { it.done }
             .sortedBy { TodoDue.parse(it.due)?.let { d -> d.at ?: d.date.atTime(23, 59) } ?: LocalDateTime.MAX }
@@ -211,7 +197,7 @@ private fun TileGrid(tiles: List<TileModel>, onOpen: (Page) -> Unit, modifier: M
     val rows = tiles.chunked(perRow)
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(7.dp, Alignment.Bottom)) {
         rows.forEach { row ->
-            Row(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 54.dp, max = 86.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            Row(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(min = 54.dp, max = 132.dp), horizontalArrangement = Arrangement.spacedBy(7.dp)) {
                 row.forEach { t -> StateTile(t, Modifier.weight(1f).fillMaxHeight()) { onOpen(t.page) } }
                 repeat(perRow - row.size) { Box(Modifier.weight(1f)) }
             }
@@ -236,11 +222,18 @@ private fun StateTile(t: TileModel, modifier: Modifier, onTap: () -> Unit) {
             PanelIcon(t.icon, 20.dp, if (t.ok) Palette.okText else Palette.iconTint)
             Txt(t.label, 15, FontWeight.Medium, Palette.white.copy(alpha = 0.85f), maxLines = 1)
         }
-        Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (t.marks.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    t.marks.take(4).forEach { c -> Box(Modifier.size(14.dp).clip(CircleShape).background(c).border(1.dp, Palette.white.copy(alpha = 0.5f), CircleShape)) }
+                }
+            }
+            Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)
+        }
     }
 }
 
-fun allTiles(panel: ResolvedPanel, states: Map<String, Entity>): List<TileModel> = buildList {
+fun allTiles(panel: ResolvedPanel, states: Map<String, Entity>, today: LocalDate = LocalDate.now()): List<TileModel> = buildList {
     panel.doorbell?.let { add(TileModel("Furtka", "podgląd", PanelIcons.doorbell, Page.GATE)) }
     if (panel.cameras.isNotEmpty()) add(TileModel("Kamery", "${panel.cameras.size} ${plural(panel.cameras.size, "kamera", "kamery", "kamer")}", PanelIcons.camera, Page.CAMERAS))
     if (panel.alarms.isNotEmpty() || panel.openings.isNotEmpty()) {
@@ -263,12 +256,36 @@ fun allTiles(panel: ResolvedPanel, states: Map<String, Entity>): List<TileModel>
         val playing = panel.mediaPlayers.mapNotNull { states[it] }.firstOrNull { it.state == "playing" }
         add(TileModel("Muzyka", playing?.attrString("media_title") ?: "nic nie gra", PanelIcons.music, Page.MUSIC, playing != null))
     }
+    panel.waste?.let { states[it] }?.let { wasteTile(it, today) }?.let(::add)
     add(TileModel("Asystent", "zapytaj", PanelIcons.mic, Page.ASSISTANT))
     if (panel.rooms.isNotEmpty()) {
         val temps = panel.rooms.mapNotNull { states[it.temperature]?.numericState }
         val avg = if (temps.isEmpty()) null else temps.average()
         add(TileModel("Dom", "${formatTemp(avg)}°", PanelIcons.home, Page.ROOMS))
     }
+}
+
+/** Next collection: fraction colours and its date; warm while the bins have to go out (today or tomorrow). */
+fun wasteTile(sensor: Entity, today: LocalDate): TileModel? {
+    if (!sensor.isAvailable) return null
+    val next = wasteDays(sensor).firstOrNull { !it.date.isBefore(today) }
+    val fractions = next?.fractions ?: sensor.state.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+    val days = next?.let { java.time.temporal.ChronoUnit.DAYS.between(today, it.date).toInt() }
+        ?: sensor.attrDouble("daysTo")?.toInt()
+    val date = next?.date ?: days?.let { today.plusDays(it.toLong()) }
+    return TileModel(
+        "Śmieci", wasteDateLabel(date, days), PanelIcons.trash, Page.WASTE,
+        active = days != null && days <= 1,
+        marks = fractions.map(WasteColors::colorFor),
+    )
+}
+
+/** "dziś", "jutro", otherwise the weekday and date: "czw, 20.11". */
+fun wasteDateLabel(date: LocalDate?, days: Int?): String = when {
+    days == 0 -> "dziś"
+    days == 1 -> "jutro"
+    date == null -> "–"
+    else -> "${date.dayOfWeek.getDisplayName(TextStyle.SHORT, PL).trimEnd('.')}, %d.%02d".format(date.dayOfMonth, date.monthValue)
 }
 
 private fun plural(n: Int, one: String, few: String, many: String) = when {
