@@ -225,7 +225,7 @@ private fun StateTile(t: TileModel, modifier: Modifier, onTap: () -> Unit) {
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             if (t.marks.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    t.marks.take(4).forEach { c -> Box(Modifier.size(14.dp).clip(CircleShape).background(c).border(1.dp, Palette.white.copy(alpha = 0.5f), CircleShape)) }
+                    t.marks.take(4).forEach { c -> Box(Modifier.size(20.dp).clip(CircleShape).background(c).border(1.5.dp, Palette.white.copy(alpha = 0.6f), CircleShape)) }
                 }
             }
             Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)

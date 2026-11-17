@@ -38,10 +38,14 @@ import androidx.compose.ui.unit.dp
 import app.wallglass.ha.Entity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.Request
+
+private const val START_DELAY_MS = 2_500L
 
 private val MUSIC_BG = Brush.linearGradient(listOf(Color(0xFF2A1A12), Color(0xFF6B3A1F), Color(0xFFC2703A)))
 
@@ -57,6 +61,12 @@ fun MusicScreen(vm: PanelActions, players: List<String>, states: Map<String, Ent
         mutableStateOf(players.firstOrNull { states[it]?.state == "playing" } ?: players.first())
     }
     val p = states[selected]
+    // stale Spotify: play has to start on a device first
+    val needsDevice = PlayerStart.needsDevice(p)
+    val others = players.filter { it != selected }.mapNotNull { states[it] }
+    var device by remember(selected) { mutableStateOf<String?>(null) }
+    val target = device?.takeIf { it in PlayerStart.sources(p) } ?: PlayerStart.defaultDevice(p, others)
+    val scope = rememberCoroutineScope()
     Box(Modifier.fillMaxSize().background(MUSIC_BG)) {
         SubPage("Muzyka", onBack, trailing = {
             Box(
@@ -76,6 +86,15 @@ fun MusicScreen(vm: PanelActions, players: List<String>, states: Map<String, Ent
                     Txt(p?.attrString("media_title") ?: "—", 21, FontWeight.SemiBold, maxLines = 2)
                     Txt(p?.attrString("media_artist") ?: "", 15, color = Color(0xFFFFE2C8), maxLines = 1)
                     p?.attrString("media_album_name")?.let { Txt(it, 12, color = Color(0xFFFFE2C8), maxLines = 1) }
+                    if (needsDevice && target != null) {
+                        val sources = PlayerStart.sources(p)
+                        Box(
+                            Modifier.padding(top = 6.dp).height(40.dp).glass(14.dp).tap {
+                                device = sources[(sources.indexOf(target) + 1) % sources.size]
+                            }.padding(horizontal = 12.dp),
+                            contentAlignment = Alignment.Center,
+                        ) { Txt("Na: $target", 15, FontWeight.Medium, maxLines = 1) }
+                    }
                 }
             }
             Progress(p)
@@ -86,7 +105,16 @@ fun MusicScreen(vm: PanelActions, players: List<String>, states: Map<String, Ent
                 }
                 Round(PanelIcons.prev, 56, Palette.glass) { vm.service("media_player", "media_previous_track", selected) }
                 Round(if (p?.state == "playing") PanelIcons.pause else PanelIcons.play, 74, Color.White, Color(0xFF6B3A1F)) {
-                    vm.service("media_player", "media_play_pause", selected)
+                    if (needsDevice && target != null) {
+                        // move playback to the device, then resume once HA has picked up the new session
+                        vm.serviceWith("media_player", "select_source", selected, buildJsonObject { put("source", target) })
+                        scope.launch {
+                            delay(START_DELAY_MS)
+                            vm.service("media_player", "media_play", selected)
+                        }
+                    } else {
+                        vm.service("media_player", "media_play_pause", selected)
+                    }
                 }
                 Round(PanelIcons.next, 56, Palette.glass) { vm.service("media_player", "media_next_track", selected) }
                 val repeat = p?.attrString("repeat")
