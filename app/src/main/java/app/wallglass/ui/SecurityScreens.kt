@@ -140,7 +140,7 @@ private fun CoverCard(vm: PanelActions, cover: NamedEntity, e: Entity?) {
         e?.state == "closed" -> 1f
         else -> 0f
     }
-    Row(Modifier.height(150.dp).glass(20.dp).padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+    Row(Modifier.height(if (canStop(e)) 182.dp else 150.dp).glass(20.dp).padding(12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Box(
             Modifier.width(54.dp).fillMaxHeight().clip(RoundedCornerShape(10.dp))
                 .border(2.dp, Color(0x8CFFFFFF), RoundedCornerShape(10.dp))
@@ -156,11 +156,25 @@ private fun CoverCard(vm: PanelActions, cover: NamedEntity, e: Entity?) {
             Box(Modifier.fillMaxWidth().height(38.dp).glass(12.dp).tap { vm.service("cover", "open_cover", cover.entity) }, contentAlignment = Alignment.Center) {
                 PanelIcon(PanelIcons.up, 20.dp)
             }
+            // stop leaves the blind wherever it is, e.g. half-way down
+            if (canStop(e)) {
+                Box(Modifier.fillMaxWidth().height(34.dp).glass(12.dp).tap { vm.service("cover", "stop_cover", cover.entity) }, contentAlignment = Alignment.Center) {
+                    PanelIcon(PanelIcons.stop, 18.dp)
+                }
+            }
             Box(Modifier.fillMaxWidth().height(38.dp).glass(12.dp).tap { vm.service("cover", "close_cover", cover.entity) }, contentAlignment = Alignment.Center) {
                 PanelIcon(PanelIcons.down, 20.dp)
             }
         }
     }
+}
+
+private const val COVER_STOP = 8L
+
+/** Stop is offered unless the cover says it cannot (no supported_features means "assume it can"). */
+fun canStop(e: Entity?): Boolean {
+    val features = e?.attrDouble("supported_features")?.toLong() ?: return true
+    return features and COVER_STOP != 0L
 }
 
 private fun coverLabel(e: Entity?, position: Double?): String = when {

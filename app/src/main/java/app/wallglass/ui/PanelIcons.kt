@@ -35,6 +35,8 @@ object PanelIcons {
     val music = stroke("M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zM20 16a3 3 0 1 1-6 0 3 3 0 0 1 6 0z")
     val play = stroke("M7 4.5v15l12-7.5z")
     val pause = stroke("M8 5v14M16 5v14")
+    val stop = stroke("M7.5 6h9a1.5 1.5 0 0 1 1.5 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-9A1.5 1.5 0 0 1 6 16.5v-9A1.5 1.5 0 0 1 7.5 6z")
+    val thermometer = stroke("M12 3a2 2 0 0 1 2 2v9.4a4 4 0 1 1-4 0V5a2 2 0 0 1 2-2zM12 9v8")
     val prev = stroke("M7 5v14M19 5L9 12l10 7z")
     val next = stroke("M17 5v14M5 5l10 7-10 7z")
     val shuffle = stroke("M4 7h3c4 0 6 10 10 10h3M4 17h3c1.6 0 2.8-1.5 3.8-3.3M14 8.5C15 7.6 16 7 17 7h3M18 4l3 3-3 3M18 14l3 3-3 3")
