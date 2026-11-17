@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Start screen tiles: the name (Furtka, Kamery…) and its icon are larger, as readable from a distance as the state below.
 - The screen dims by the room, not only by the clock: the panel's light sensor (or, until it reports, the sun below
   the horizon) puts a dark room on the night brightness, so the clock no longer shines at full brightness in the evening.
 - The night brightness chosen in the panel settings is now actually used.

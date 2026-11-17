@@ -228,12 +228,13 @@ private fun StateTile(t: TileModel, modifier: Modifier, onTap: () -> Unit) {
     }
     val border = if (t.ok && !t.active) Palette.okBorder else Palette.glassBorder
     Column(
-        modifier.glass(16.dp, fill, border).tap(onTap).padding(horizontal = 10.dp, vertical = 8.dp),
+        modifier.glass(16.dp, fill, border).tap(onTap).padding(horizontal = 9.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-            PanelIcon(t.icon, 16.dp, if (t.ok) Palette.okText else Palette.iconTint)
-            Txt(t.label, 11, color = Palette.soft, maxLines = 1)
+        // the name has to be readable from across the room, not only the state below it
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            PanelIcon(t.icon, 20.dp, if (t.ok) Palette.okText else Palette.iconTint)
+            Txt(t.label, 15, FontWeight.Medium, Palette.white.copy(alpha = 0.85f), maxLines = 1)
         }
         Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)
     }
