@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Start screen tiles: a big icon on top with the name and state below it, readable from across the room. The
+  “Dom” tile is now “Temp.” with a thermometer icon.
 - Blinds: a stop button between up and down, to leave a blind half-way (shown unless the cover cannot stop).
 - Music: when Spotify's session has gone stale, HA only lets it pick a device and play failed with a validation error.
   The music screen now shows “Na: Speaker” (tap to change the device) and play moves playback there, then resumes

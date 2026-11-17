@@ -214,21 +214,24 @@ private fun StateTile(t: TileModel, modifier: Modifier, onTap: () -> Unit) {
     }
     val border = if (t.ok && !t.active) Palette.okBorder else Palette.glassBorder
     Column(
-        modifier.glass(16.dp, fill, border).tap(onTap).padding(horizontal = 9.dp, vertical = 8.dp),
+        modifier.glass(16.dp, fill, border).tap(onTap).padding(horizontal = 10.dp, vertical = 10.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        // the name has to be readable from across the room, not only the state below it
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            PanelIcon(t.icon, 20.dp, if (t.ok) Palette.okText else Palette.iconTint)
-            Txt(t.label, 15, FontWeight.Medium, Palette.white.copy(alpha = 0.85f), maxLines = 1)
-        }
-        // colour marks (waste fractions) sit in the middle of the tile, where there is room for them
-        if (t.marks.isNotEmpty()) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
-                t.marks.take(3).forEach { c -> Box(Modifier.size(24.dp).clip(CircleShape).background(c).border(1.5.dp, Palette.white.copy(alpha = 0.6f), CircleShape)) }
+        // big icon on top, name and state together at the bottom: no empty middle on tall tiles
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            PanelIcon(t.icon, 30.dp, if (t.ok) Palette.okText else Palette.iconTint)
+            Spacer(Modifier.weight(1f))
+            // colour marks (waste fractions) next to the icon
+            if (t.marks.isNotEmpty()) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    t.marks.take(3).forEach { c -> Box(Modifier.size(22.dp).clip(CircleShape).background(c).border(1.5.dp, Palette.white.copy(alpha = 0.6f), CircleShape)) }
+                }
             }
         }
-        Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Txt(t.label, 16, FontWeight.SemiBold, maxLines = 1)
+            Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.Medium, if (t.ok) Palette.okText else Palette.white.copy(alpha = 0.75f), maxLines = 1)
+        }
     }
 }
 
@@ -260,7 +263,7 @@ fun allTiles(panel: ResolvedPanel, states: Map<String, Entity>, today: LocalDate
     if (panel.rooms.isNotEmpty()) {
         val temps = panel.rooms.mapNotNull { states[it.temperature]?.numericState }
         val avg = if (temps.isEmpty()) null else temps.average()
-        add(TileModel("Dom", "${formatTemp(avg)}°", PanelIcons.home, Page.ROOMS))
+        add(TileModel("Temp.", "${formatTemp(avg)}°", PanelIcons.thermometer, Page.ROOMS))
     }
 }
 
