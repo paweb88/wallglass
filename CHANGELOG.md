@@ -5,7 +5,7 @@
 - Music: when Spotify's session has gone stale, HA only lets it pick a device and play failed with a validation error.
   The music screen now shows “Na: Speaker” (tap to change the device) and play moves playback there, then resumes
   as soon as HA reports the new session.
-- Larger waste fraction dots on the start screen.
+- Larger waste fraction dots, centred on the waste tile.
 - Waste collection is a start-screen tile: coloured dots for the fractions, the date (“jutro”, “czw, 19.11”), warm when
   the bins have to go out; tapping it opens the schedule. The Today card no longer repeats closures and waste, which
   have their own tiles, and the tiles grow to use the freed space.

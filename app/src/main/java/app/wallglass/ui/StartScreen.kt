@@ -222,14 +222,13 @@ private fun StateTile(t: TileModel, modifier: Modifier, onTap: () -> Unit) {
             PanelIcon(t.icon, 20.dp, if (t.ok) Palette.okText else Palette.iconTint)
             Txt(t.label, 15, FontWeight.Medium, Palette.white.copy(alpha = 0.85f), maxLines = 1)
         }
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (t.marks.isNotEmpty()) {
-                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                    t.marks.take(4).forEach { c -> Box(Modifier.size(20.dp).clip(CircleShape).background(c).border(1.5.dp, Palette.white.copy(alpha = 0.6f), CircleShape)) }
-                }
+        // colour marks (waste fractions) sit in the middle of the tile, where there is room for them
+        if (t.marks.isNotEmpty()) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)) {
+                t.marks.take(3).forEach { c -> Box(Modifier.size(24.dp).clip(CircleShape).background(c).border(1.5.dp, Palette.white.copy(alpha = 0.6f), CircleShape)) }
             }
-            Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)
         }
+        Txt(t.sub.replaceFirstChar { it.uppercase() }, 15, FontWeight.SemiBold, if (t.ok) Palette.okText else Palette.white, maxLines = 1)
     }
 }
 
