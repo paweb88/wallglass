@@ -38,14 +38,12 @@ import androidx.compose.ui.unit.dp
 import app.wallglass.ha.Entity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.Request
 
-private const val START_DELAY_MS = 2_500L
+private const val START_TIMEOUT_MS = 30_000L
 
 private val MUSIC_BG = Brush.linearGradient(listOf(Color(0xFF2A1A12), Color(0xFF6B3A1F), Color(0xFFC2703A)))
 
@@ -66,7 +64,13 @@ fun MusicScreen(vm: PanelActions, players: List<String>, states: Map<String, Ent
     val others = players.filter { it != selected }.mapNotNull { states[it] }
     var device by remember(selected) { mutableStateOf<String?>(null) }
     val target = device?.takeIf { it in PlayerStart.sources(p) } ?: PlayerStart.defaultDevice(p, others)
-    val scope = rememberCoroutineScope()
+    // after moving playback, resume as soon as HA reports a session that can play (Spotify takes a few seconds)
+    var startRequested by remember(selected) { mutableLongStateOf(0L) }
+    LaunchedEffect(startRequested, needsDevice) {
+        if (startRequested == 0L || needsDevice) return@LaunchedEffect
+        if (System.currentTimeMillis() - startRequested < START_TIMEOUT_MS) vm.service("media_player", "media_play", selected)
+        startRequested = 0L
+    }
     Box(Modifier.fillMaxSize().background(MUSIC_BG)) {
         SubPage("Muzyka", onBack, trailing = {
             Box(
@@ -108,10 +112,7 @@ fun MusicScreen(vm: PanelActions, players: List<String>, states: Map<String, Ent
                     if (needsDevice && target != null) {
                         // move playback to the device, then resume once HA has picked up the new session
                         vm.serviceWith("media_player", "select_source", selected, buildJsonObject { put("source", target) })
-                        scope.launch {
-                            delay(START_DELAY_MS)
-                            vm.service("media_player", "media_play", selected)
-                        }
+                        startRequested = System.currentTimeMillis()
                     } else {
                         vm.service("media_player", "media_play_pause", selected)
                     }
