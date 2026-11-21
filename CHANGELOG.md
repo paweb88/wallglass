@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- HA integration: a panel that connects while Home Assistant is still starting no longer shows entity ids instead of
+  room names and loses the humidity; names and humidity sensors also come from the entity registry, and the config is
+  sent again once HA has started.
 - Start screen tiles: a big icon on top with the name and state below it, readable from across the room. The
   “Dom” tile is now “Temp.” with a thermometer icon.
 - Blinds: a stop button between up and down, to leave a blind half-way (shown unless the cover cannot stop).

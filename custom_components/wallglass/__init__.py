@@ -9,7 +9,8 @@ import probatio
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY, ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
@@ -43,6 +44,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device_id = entry.data["device_id"]
     hub.panels[device_id] = PanelRuntime(device_id=device_id, name=entry.title)
     entry.async_on_unload(entry.add_update_listener(_options_updated))
+    if not hass.is_running:
+        # A panel that connects while HA starts gets a config built before every entity has its
+        # state; send it again once HA is up so names, humidity and icons are complete.
+        @callback
+        def _resend(_: Event) -> None:
+            push_config(hass, entry)
+
+        entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _resend))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

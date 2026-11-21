@@ -85,16 +85,38 @@ def _area_name(hass: HomeAssistant, entity_id: str) -> str | None:
 
 
 def _humidity_for(hass: HomeAssistant, temperature_id: str) -> str | None:
-    """A humidity sensor on the same device as the temperature sensor."""
+    """A humidity sensor on the same device as the temperature sensor.
+
+    The registry is checked as well as the state, so the sensor is found while HA is still
+    starting and the integration that owns it (MQTT, Zigbee…) has not restored its state yet.
+    """
     registry = er.async_get(hass)
     ent = registry.async_get(temperature_id)
     if ent is None or ent.device_id is None:
         return None
     for other in er.async_entries_for_device(registry, ent.device_id):
+        if other.domain != "sensor":
+            continue
         state = hass.states.get(other.entity_id)
-        if other.domain == "sensor" and state and state.attributes.get("device_class") == "humidity":
+        state_class = state.attributes.get("device_class") if state else None
+        if "humidity" in (state_class, other.device_class, other.original_device_class):
             return other.entity_id
     return None
+
+
+def entity_name(hass: HomeAssistant, entity_id: str) -> str:
+    """Friendly name, also before the entity has a state (HA still starting)."""
+    if state := hass.states.get(entity_id):
+        return state.name
+    ent = er.async_get(hass).async_get(entity_id)
+    if ent is None:
+        return entity_id
+    name = ent.name or ent.original_name
+    if ent.has_entity_name and ent.device_id:
+        device = dr.async_get(hass).async_get(ent.device_id)
+        device_name = (device.name_by_user or device.name) if device else None
+        name = " ".join(part for part in (device_name, name) if part)
+    return name or entity_id
 
 
 _NAME_NOISE = re.compile(r"(?i)\b(temperature|temperatura|termometr|humidity|wilgotność)\b")
@@ -106,8 +128,7 @@ def _clean(name: str) -> str:
 
 
 def _room(hass: HomeAssistant, temperature_id: str) -> dict[str, Any]:
-    state = hass.states.get(temperature_id)
-    name = _area_name(hass, temperature_id) or _clean(state.name if state else temperature_id)
+    name = _area_name(hass, temperature_id) or _clean(entity_name(hass, temperature_id))
     room: dict[str, Any] = {"name": name, "temperature": temperature_id}
     if humidity := _humidity_for(hass, temperature_id):
         room["humidity"] = humidity
@@ -181,7 +202,7 @@ def build_panel_config(hass: HomeAssistant, options: dict[str, Any]) -> dict[str
         if stop := action_for(options.get(OPT_HEATING_STOP)):
             heating["stop"] = stop
         heating["schedules"] = [
-            {"name": (hass.states.get(e).name if hass.states.get(e) else e), "entity": e}
+            {"name": entity_name(hass, e), "entity": e}
             for e in options.get(OPT_HEATING_SCHEDULES) or []
         ]
         cfg["heating"] = heating
